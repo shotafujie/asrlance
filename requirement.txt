@@ -1,0 +1,5 @@
+psutil
+jiwer
+mlx-whisper
+openai-whisper
+
