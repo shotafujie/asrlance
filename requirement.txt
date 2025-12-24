@@ -1,5 +1,18 @@
+# asrlance requirements.txt
+# ReazonSpeech ESPnet v2 対応版
+
+# 共通
 psutil
-jiwer
+
+# MLX Whisper (Apple Silicon Mac用)
 mlx-whisper
+
+# OpenAI Whisper
 openai-whisper
 
+# ReazonSpeech ESPnet v2
+reazonspeech-espnet
+torch
+torchaudio
+espnet
+espnet_model_zoo
