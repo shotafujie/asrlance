@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 benchmark.py - 音声認識ベンチマークツール
-MLX Whisper, OpenAI Whisper, ReazonSpeech ESPnet v2 に対応
+MLX Whisper, OpenAI Whisper, ReazonSpeech k2, FunASR SenseVoiceSmall,
+Moonshine (Japanese Base), Kotoba-Whisper v2.0, rinna/nue-asr, Qwen3-ASR 0.6B,
+IBM granite-4.0-1b-speech に対応
 
 使用方法:
     python benchmark.py <音声ファイルパス> <正解テキストファイル> <モデルエイリアス> [出力ログファイル名]
@@ -9,7 +11,13 @@ MLX Whisper, OpenAI Whisper, ReazonSpeech ESPnet v2 に対応
 モデルエイリアス:
     - mlx: MLX Whisper Large V3 Turbo
     - whisper: OpenAI Whisper Large V3 Turbo OSS
-    - reazonspeech: ReazonSpeech ESPnet v2
+    - reazonspeech: ReazonSpeech k2
+    - funasr: FunASR SenseVoiceSmall
+    - moonshine: Moonshine Japanese Base
+    - kotoba: Kotoba-Whisper v2.0
+    - nue: rinna/nue-asr
+    - qwen: Qwen3-ASR 0.6B
+    - granite: IBM granite-4.0-1b-speech
 """
 
 import sys
@@ -145,6 +153,18 @@ def main():
         print(f"エラー: 必要なモジュールがインストールされていません: {e}")
         if model_alias == "reazonspeech":
             print("  pip install reazonspeech-espnet torch torchaudio espnet espnet_model_zoo")
+        elif model_alias == "funasr":
+            print("  pip install funasr")
+        elif model_alias == "moonshine":
+            print("  pip install moonshine-voice")
+        elif model_alias == "kotoba":
+            print("  pip install transformers accelerate torch torchaudio")
+        elif model_alias == "nue":
+            print("  pip install git+https://github.com/rinnakk/nue-asr.git")
+        elif model_alias == "qwen":
+            print("  pip install qwen-asr")
+        elif model_alias == "granite":
+            print("  pip install transformers peft soundfile torchaudio")
         sys.exit(1)
     except Exception as e:
         print(f"エラー: 音声認識中にエラーが発生しました: {e}")

@@ -16,9 +16,17 @@ uv.lock
 # Benchmark logs
 *_log.txt
 
+# 音声データとベンチ結果（push しない）
+my_voice/*.wav
+my_voice/result_*.csv
+my_voice/comparison.csv
+sample_*.wav
+ground_truth_*.txt
+
 # IDE
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 

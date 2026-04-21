@@ -1,0 +1,1 @@
+PythonでAPIを呼び出してJSONを取得します。
