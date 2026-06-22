@@ -34,3 +34,18 @@ qwen-asr
 
 # IBM granite-4.0-1b-speech (transformers>=4.52.1, peft 必須)
 peft
+
+# Gemma 4 E2B (audio) ※ 専用 venv で実行すること（理由は下記）
+# Google 公式の transformers 実装 (Gemma4ForConditionalGeneration) で動かす。
+#  - Gemma4 サポートには transformers>=5.1 が必要。本リポジトリの他モデルは
+#    transformers 4.57.x 前提なので【同一環境に同居できない】。gemma だけ別 venv を作る:
+#      uv venv ~/gemma-venv --python 3.10
+#      uv pip install --python ~/gemma-venv/bin/python \
+#          "transformers>=5.1" torch torchvision torchaudio soundfile accelerate psutil
+#    モデルは unsloth/gemma-4-E2B-it-qat-q4_0-unquantized (ungated, フル精度, ~10.6GB)。
+#  - ハマりどころ: MLX(mlx-vlm) 経路は音声グラウンディングが劣化し CER が見かけ上 約8倍
+#    悪化する（公式 transformers なら自声20文で平均CER 20.5%）。MLX では動かさないこと。
+# transformers>=5.1
+# torch
+# torchvision
+# soundfile

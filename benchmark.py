@@ -165,6 +165,9 @@ def main():
             print("  pip install qwen-asr")
         elif model_alias == "granite":
             print("  pip install transformers peft soundfile torchaudio")
+        elif model_alias == "gemma":
+            print('  専用 venv で: pip install "transformers>=5.1" torch torchvision soundfile')
+            print("  ※ transformers>=5.1 が必要で他モデル(4.57.x)と非互換（README 参照）")
         sys.exit(1)
     except Exception as e:
         print(f"エラー: 音声認識中にエラーが発生しました: {e}")

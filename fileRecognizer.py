@@ -2,10 +2,11 @@
 fileRecognizer.py - 音声認識処理モジュール
 MLX Whisper, OpenAI Whisper, ReazonSpeech k2, FunASR SenseVoiceSmall,
 Moonshine (Japanese Base), Kotoba-Whisper v2.0, rinna/nue-asr, Qwen3-ASR 0.6B,
-IBM granite-4.0-1b-speech に対応
+IBM granite-4.0-1b-speech, Gemma 4 E2B (audio, MLX) に対応
 """
 
 import os
+import re
 import time
 import psutil
 from typing import Tuple, Optional
@@ -405,6 +406,130 @@ def recognize_with_granite(audio_path: str) -> Tuple[str, float, float, float]:
 
 
 # ============================================================
+# Gemma 4 E2B (audio, transformers 公式実装) 認識
+# ============================================================
+# Gemma 4 E2B はマルチモーダル LLM のため、書き起こしを ASR モデルのように
+# 本文だけ返すとは限らず、前置き（"Here is the transcription:" / "書き起こし："）や
+# 引用符・コードフェンスを付けることがある。下記でそれらを除去する。
+#
+# 重要: 音声経路は Google 公式の transformers 実装で動かすこと。
+# 当初は MLX(mlx-vlm 0.4.3) で実行したが、音声グラウンディングが劣化して
+# 日本語CERが見かけ上 152%(中央値92%) まで悪化した。同じ音声を公式 transformers
+# 実装に通すと CER 平均20.5%/中央値14%(自声20文) まで回復し、kotoba/nue/granite と
+# ほぼ互角と判明（MLX側の実装バグであってモデルの実力ではなかった）。
+_GEMMA_MODEL_ID = "unsloth/gemma-4-E2B-it-qat-q4_0-unquantized"  # ungated, フル精度, 音声対応
+_GEMMA_META_KEYWORDS = ("書き起こし", "文字起こし", "transcription", "transcript")
+_GEMMA_LEADIN_KEYWORDS = ("here is", "here's", "sure", "以下", "結果", "result")
+_GEMMA_PROMPT = (
+    "次の音声を一字一句、日本語で書き起こしてください。"
+    "書き起こした本文のみを出力し、説明・前置き・翻訳・引用符・記号は付けないでください。"
+)
+
+
+def clean_gemma_transcription(raw: str) -> str:
+    """Gemma 4 E2B の出力から前置き・引用符・コードフェンスを除去し本文のみ返す"""
+    if not raw:
+        return ""
+    text = raw.strip()
+    # マークダウンのコードフェンスを除去
+    text = re.sub(r"^```[\w-]*\s*", "", text)
+    text = re.sub(r"\s*```$", "", text).strip()
+
+    # 先頭の前置き行を除去（後続に本文がある場合のみ）
+    lines = text.splitlines()
+    while len(lines) > 1:
+        head = lines[0].strip()
+        low = head.lower()
+        if head and head.endswith((":", "：", "。", ".")) and any(
+            k in low for k in _GEMMA_META_KEYWORDS
+        ):
+            lines.pop(0)
+            continue
+        if head.endswith((":", "：")) and any(
+            k in low for k in _GEMMA_LEADIN_KEYWORDS
+        ):
+            lines.pop(0)
+            continue
+        break
+    text = "\n".join(lines).strip()
+
+    # 1行内のインライン前置き "<前置き> : <本文>" を除去（前置きにキーワードがある場合のみ）
+    m = re.match(r"^([^「『\"'\n]{0,40}?)[:：]\s*(.+)$", text, re.DOTALL)
+    if m and any(
+        k in m.group(1).lower()
+        for k in _GEMMA_META_KEYWORDS + _GEMMA_LEADIN_KEYWORDS
+    ):
+        text = m.group(2).strip()
+
+    # 前後の引用符・鉤括弧・バッククォートを除去
+    text = text.strip().strip("「」『』“”‘’\"'`").strip()
+    return text
+
+
+def recognize_with_gemma4(audio_path: str) -> Tuple[str, float, float, float]:
+    """
+    Gemma 4 E2B（Google, ネイティブ音声入力のマルチモーダル LLM）で音声認識を行う。
+    Google 公式の transformers 実装 (Gemma4ForConditionalGeneration) を使用する。
+    ※ Gemma4 サポートには transformers>=5.1 が必要で、他モデル(4.57.x)とは非互換のため
+      専用 venv での実行を推奨（README のトラブルシューティング参照）。
+    """
+    import soundfile as sf
+    import torch
+    from transformers import AutoProcessor, Gemma4ForConditionalGeneration
+
+    process = psutil.Process(os.getpid())
+    cpu_samples = []
+
+    if torch.cuda.is_available():
+        device, dtype = "cuda", torch.float16
+    elif torch.backends.mps.is_available():
+        device, dtype = "mps", torch.float16
+    else:
+        device, dtype = "cpu", torch.float32
+
+    print(f"Gemma 4 E2B モデルをロード中... ({_GEMMA_MODEL_ID}, device={device})")
+    processor = AutoProcessor.from_pretrained(_GEMMA_MODEL_ID)
+    model = Gemma4ForConditionalGeneration.from_pretrained(
+        _GEMMA_MODEL_ID, dtype=dtype, device_map=device
+    )
+    model.eval()
+
+    data, sr = sf.read(audio_path, dtype="float32")
+    if getattr(data, "ndim", 1) > 1:
+        data = data.mean(axis=1)
+    if sr != 16000:
+        import torchaudio
+        data = torchaudio.functional.resample(torch.from_numpy(data), sr, 16000).numpy()
+
+    messages = [{
+        "role": "user",
+        "content": [{"type": "audio"}, {"type": "text", "text": _GEMMA_PROMPT}],
+    }]
+    prompt = processor.apply_chat_template(
+        messages, add_generation_prompt=True, tokenize=False
+    )
+
+    start_time = time.time()
+    cpu_samples.append(process.cpu_percent(interval=None))
+
+    inputs = processor(text=prompt, audio=[data], return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+
+    cpu_samples.append(process.cpu_percent(interval=None))
+    end_time = time.time()
+
+    gen = outputs[0, inputs["input_ids"].shape[1]:]
+    text = clean_gemma_transcription(processor.decode(gen, skip_special_tokens=True))
+
+    processing_time = end_time - start_time
+    avg_cpu = sum(cpu_samples) / len(cpu_samples) if cpu_samples else 0
+    max_cpu = max(cpu_samples) if cpu_samples else 0
+
+    return text, processing_time, avg_cpu, max_cpu
+
+
+# ============================================================
 # 統合認識関数
 # ============================================================
 def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, float]:
@@ -436,6 +561,8 @@ def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, flo
         return recognize_with_qwen3_asr(audio_path)
     elif model_alias == "granite":
         return recognize_with_granite(audio_path)
+    elif model_alias == "gemma":
+        return recognize_with_gemma4(audio_path)
     else:
         raise ValueError(f"未対応のモデル: {model_alias}")
 
@@ -486,6 +613,11 @@ MODEL_INFO = {
         "name": "IBM granite-4.0-1b-speech",
         "alias": "granite",
         "display_name": "granite-4.0-1b-speech（IBM, 1B, 多言語, 日本語対応）"
+    },
+    "gemma": {
+        "name": "Gemma 4 E2B (audio)",
+        "alias": "gemma",
+        "display_name": "gemma-4-E2B-it（Google, ネイティブ音声入力マルチモーダル, transformers 公式実装）"
     }
 }
 

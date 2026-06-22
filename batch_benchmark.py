@@ -6,7 +6,7 @@ batch_benchmark.py - 複数音声ファイルに対して1モデルを1回だけ
     python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]
 
 音声ディレクトリには <stem>.wav と同名の <stem>.txt（正解テキスト）が対で存在する想定。
-モデルエイリアス: kotoba, nue, qwen, granite
+モデルエイリアス: kotoba, nue, qwen, granite, gemma
 """
 
 import csv
@@ -160,11 +160,59 @@ def build_granite_runner() -> Callable[[str], str]:
     return _run
 
 
+def build_gemma_runner() -> Callable[[str], str]:
+    # Gemma 4 E2B は Google 公式の transformers 実装で動かす（MLX 経路は音声品質が劣化）。
+    # transformers>=5.1 が必要で他モデル(4.57.x)と非互換のため専用 venv 推奨。
+    import soundfile as sf
+    import torch
+    import torchaudio
+    from transformers import AutoProcessor, Gemma4ForConditionalGeneration
+
+    from fileRecognizer import _GEMMA_MODEL_ID, _GEMMA_PROMPT, clean_gemma_transcription
+
+    if torch.cuda.is_available():
+        device, dtype = "cuda", torch.float16
+    elif torch.backends.mps.is_available():
+        device, dtype = "mps", torch.float16
+    else:
+        device, dtype = "cpu", torch.float32
+
+    print(f"[gemma] loading model ({_GEMMA_MODEL_ID}) on device={device} ...")
+    processor = AutoProcessor.from_pretrained(_GEMMA_MODEL_ID)
+    model = Gemma4ForConditionalGeneration.from_pretrained(
+        _GEMMA_MODEL_ID, dtype=dtype, device_map=device
+    )
+    model.eval()
+
+    messages = [{
+        "role": "user",
+        "content": [{"type": "audio"}, {"type": "text", "text": _GEMMA_PROMPT}],
+    }]
+    prompt = processor.apply_chat_template(
+        messages, add_generation_prompt=True, tokenize=False
+    )
+
+    def _run(audio_path: str) -> str:
+        data, sr = sf.read(audio_path, dtype="float32")
+        if getattr(data, "ndim", 1) > 1:
+            data = data.mean(axis=1)
+        if sr != 16000:
+            data = torchaudio.functional.resample(torch.from_numpy(data), sr, 16000).numpy()
+        inputs = processor(text=prompt, audio=[data], return_tensors="pt").to(device)
+        with torch.no_grad():
+            outputs = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+        gen = outputs[0, inputs["input_ids"].shape[1]:]
+        return clean_gemma_transcription(processor.decode(gen, skip_special_tokens=True))
+
+    return _run
+
+
 RUNNERS = {
     "kotoba": build_kotoba_runner,
     "nue": build_nue_runner,
     "qwen": build_qwen_runner,
     "granite": build_granite_runner,
+    "gemma": build_gemma_runner,
 }
 
 
@@ -174,7 +222,7 @@ RUNNERS = {
 def main():
     if len(sys.argv) < 3:
         print("使用方法: python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]")
-        print("モデル: kotoba | nue | qwen | granite")
+        print("モデル: kotoba | nue | qwen | granite | gemma")
         sys.exit(1)
 
     model_alias = sys.argv[1].lower()
