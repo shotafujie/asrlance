@@ -2,7 +2,7 @@
 fileRecognizer.py - 音声認識処理モジュール
 MLX Whisper, OpenAI Whisper, ReazonSpeech k2, FunASR SenseVoiceSmall,
 Moonshine (Japanese Base), Kotoba-Whisper v2.0, rinna/nue-asr, Qwen3-ASR 0.6B,
-IBM granite-4.0-1b-speech, Gemma 4 E2B (audio, MLX) に対応
+IBM granite-4.0-1b-speech, Gemma 4 E2B (audio), Cohere Transcribe (cohere-transcribe-03-2026) に対応
 """
 
 import os
@@ -530,6 +530,66 @@ def recognize_with_gemma4(audio_path: str) -> Tuple[str, float, float, float]:
 
 
 # ============================================================
+# Cohere Transcribe (cohere-transcribe-03-2026) 認識
+# ============================================================
+# Cohere Labs の専用 ASR モデル（2B, Fast-Conformer encoder + Transformer decoder,
+# Apache 2.0, 日本語含む14言語）。OpenASR(英語8セット)平均 WER 5.42% で公開当時 SOTA。
+# transformers 公式実装 (CohereAsrForConditionalGeneration) で動かす。
+# ※ Gemma 同様、transformers>=5.4 が必要で他モデル(4.57.x)とは非互換のため
+#   専用 venv での実行を推奨（README のトラブルシューティング参照）。
+# 言語は自動判定を持たないため processor に language="ja" を明示する。
+_COHERE_MODEL_ID = "CohereLabs/cohere-transcribe-03-2026"
+
+
+def recognize_with_cohere(audio_path: str) -> Tuple[str, float, float, float]:
+    """
+    Cohere Transcribe（cohere-transcribe-03-2026, Cohere Labs の専用 ASR）で音声認識を行う。
+    """
+    import soundfile as sf
+    import torch
+    from transformers import AutoProcessor, CohereAsrForConditionalGeneration
+
+    process = psutil.Process(os.getpid())
+    cpu_samples = []
+
+    if torch.cuda.is_available():
+        device, dtype = "cuda", torch.bfloat16
+    elif torch.backends.mps.is_available():
+        device, dtype = "mps", torch.float16
+    else:
+        device, dtype = "cpu", torch.float32
+
+    print(f"Cohere Transcribe モデルをロード中... ({_COHERE_MODEL_ID}, device={device})")
+    processor = AutoProcessor.from_pretrained(_COHERE_MODEL_ID)
+    model = CohereAsrForConditionalGeneration.from_pretrained(
+        _COHERE_MODEL_ID, torch_dtype=dtype
+    ).to(device)
+    model.eval()
+
+    data, sr = sf.read(audio_path, dtype="float32")
+    if getattr(data, "ndim", 1) > 1:
+        data = data.mean(axis=1)
+
+    start_time = time.time()
+    cpu_samples.append(process.cpu_percent(interval=None))
+
+    inputs = processor(data, sampling_rate=sr, return_tensors="pt", language="ja")
+    inputs = inputs.to(device, dtype=dtype)
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=256)
+    text = processor.batch_decode(outputs, skip_special_tokens=True)[0].strip()
+
+    cpu_samples.append(process.cpu_percent(interval=None))
+    end_time = time.time()
+
+    processing_time = end_time - start_time
+    avg_cpu = sum(cpu_samples) / len(cpu_samples) if cpu_samples else 0
+    max_cpu = max(cpu_samples) if cpu_samples else 0
+
+    return text, processing_time, avg_cpu, max_cpu
+
+
+# ============================================================
 # 統合認識関数
 # ============================================================
 def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, float]:
@@ -563,6 +623,8 @@ def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, flo
         return recognize_with_granite(audio_path)
     elif model_alias == "gemma":
         return recognize_with_gemma4(audio_path)
+    elif model_alias == "cohere":
+        return recognize_with_cohere(audio_path)
     else:
         raise ValueError(f"未対応のモデル: {model_alias}")
 
@@ -618,6 +680,11 @@ MODEL_INFO = {
         "name": "Gemma 4 E2B (audio)",
         "alias": "gemma",
         "display_name": "gemma-4-E2B-it（Google, ネイティブ音声入力マルチモーダル, transformers 公式実装）"
+    },
+    "cohere": {
+        "name": "Cohere Transcribe (cohere-transcribe-03-2026)",
+        "alias": "cohere",
+        "display_name": "cohere-transcribe-03-2026（Cohere Labs, 2B, Fast-Conformer, 14言語, OpenASR SOTA）"
     }
 }
 
