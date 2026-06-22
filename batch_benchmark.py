@@ -6,7 +6,7 @@ batch_benchmark.py - 複数音声ファイルに対して1モデルを1回だけ
     python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]
 
 音声ディレクトリには <stem>.wav と同名の <stem>.txt（正解テキスト）が対で存在する想定。
-モデルエイリアス: kotoba, nue, qwen, granite, gemma
+モデルエイリアス: kotoba, nue, qwen, granite, gemma, cohere
 """
 
 import csv
@@ -207,12 +207,50 @@ def build_gemma_runner() -> Callable[[str], str]:
     return _run
 
 
+def build_cohere_runner() -> Callable[[str], str]:
+    # Cohere Transcribe (cohere-transcribe-03-2026) は transformers 公式実装で動かす。
+    # transformers>=5.4 が必要で他モデル(4.57.x)と非互換のため専用 venv 推奨。
+    # 言語自動判定を持たないため processor に language="ja" を明示する。
+    import soundfile as sf
+    import torch
+    from transformers import AutoProcessor, CohereAsrForConditionalGeneration
+
+    from fileRecognizer import _COHERE_MODEL_ID
+
+    if torch.cuda.is_available():
+        device, dtype = "cuda", torch.bfloat16
+    elif torch.backends.mps.is_available():
+        device, dtype = "mps", torch.float16
+    else:
+        device, dtype = "cpu", torch.float32
+
+    print(f"[cohere] loading model ({_COHERE_MODEL_ID}) on device={device} ...")
+    processor = AutoProcessor.from_pretrained(_COHERE_MODEL_ID)
+    model = CohereAsrForConditionalGeneration.from_pretrained(
+        _COHERE_MODEL_ID, torch_dtype=dtype
+    ).to(device)
+    model.eval()
+
+    def _run(audio_path: str) -> str:
+        data, sr = sf.read(audio_path, dtype="float32")
+        if getattr(data, "ndim", 1) > 1:
+            data = data.mean(axis=1)
+        inputs = processor(data, sampling_rate=sr, return_tensors="pt", language="ja")
+        inputs = inputs.to(device, dtype=dtype)
+        with torch.no_grad():
+            outputs = model.generate(**inputs, max_new_tokens=256)
+        return processor.batch_decode(outputs, skip_special_tokens=True)[0].strip()
+
+    return _run
+
+
 RUNNERS = {
     "kotoba": build_kotoba_runner,
     "nue": build_nue_runner,
     "qwen": build_qwen_runner,
     "granite": build_granite_runner,
     "gemma": build_gemma_runner,
+    "cohere": build_cohere_runner,
 }
 
 
@@ -222,7 +260,7 @@ RUNNERS = {
 def main():
     if len(sys.argv) < 3:
         print("使用方法: python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]")
-        print("モデル: kotoba | nue | qwen | granite | gemma")
+        print("モデル: kotoba | nue | qwen | granite | gemma | cohere")
         sys.exit(1)
 
     model_alias = sys.argv[1].lower()

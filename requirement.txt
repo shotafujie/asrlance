@@ -49,3 +49,21 @@ peft
 # torch
 # torchvision
 # soundfile
+
+# Cohere Transcribe (cohere-transcribe-03-2026) ※ 専用 venv で実行すること（理由は下記）
+# transformers 公式の CohereAsrForConditionalGeneration で動かす。
+#  - transformers>=5.4 が必要。本リポジトリの他モデル(4.57.x)とは【同一環境に同居できない】。
+#    cohere だけ別 venv を作る:
+#      uv venv ~/cohere-venv --python 3.10
+#      uv pip install --python ~/cohere-venv/bin/python \
+#          "transformers>=5.4" torch torchaudio soundfile librosa sentencepiece protobuf accelerate psutil
+#  - モデル CohereLabs/cohere-transcribe-03-2026 は gated(Apache 2.0, 規約同意で即時付与)。
+#    gated を読めるトークンで HF 認証が必要（fine-grained で canReadGatedRepos:false だと 403）。
+#  - processor に language="ja" を必ず指定（言語自動判定なし）。自声20文で平均CER 11.81%(2位)。
+# transformers>=5.4
+# torch
+# torchaudio
+# soundfile
+# librosa
+# sentencepiece
+# protobuf
