@@ -6,7 +6,7 @@ batch_benchmark.py - 複数音声ファイルに対して1モデルを1回だけ
     python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]
 
 音声ディレクトリには <stem>.wav と同名の <stem>.txt（正解テキスト）が対で存在する想定。
-モデルエイリアス: kotoba, nue, qwen, granite, gemma, cohere
+モデルエイリアス: kotoba, nue, qwen, qwen17b, granite, gemma, cohere
 """
 
 import csv
@@ -72,7 +72,7 @@ def build_nue_runner() -> Callable[[str], str]:
     return _run
 
 
-def build_qwen_runner() -> Callable[[str], str]:
+def build_qwen_runner(model_id: str = "Qwen/Qwen3-ASR-0.6B") -> Callable[[str], str]:
     import torch
     from qwen_asr import Qwen3ASRModel
 
@@ -86,9 +86,9 @@ def build_qwen_runner() -> Callable[[str], str]:
         device_map = "cpu"
         dtype = torch.float32
 
-    print(f"[qwen] loading model on device_map={device_map} ...")
+    print(f"[qwen] loading model ({model_id}) on device_map={device_map} ...")
     model = Qwen3ASRModel.from_pretrained(
-        "Qwen/Qwen3-ASR-0.6B",
+        model_id,
         dtype=dtype,
         device_map=device_map,
         max_inference_batch_size=32,
@@ -248,6 +248,7 @@ RUNNERS = {
     "kotoba": build_kotoba_runner,
     "nue": build_nue_runner,
     "qwen": build_qwen_runner,
+    "qwen17b": lambda: build_qwen_runner("Qwen/Qwen3-ASR-1.7B"),
     "granite": build_granite_runner,
     "gemma": build_gemma_runner,
     "cohere": build_cohere_runner,
@@ -260,7 +261,7 @@ RUNNERS = {
 def main():
     if len(sys.argv) < 3:
         print("使用方法: python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]")
-        print("モデル: kotoba | nue | qwen | granite | gemma | cohere")
+        print("モデル: kotoba | nue | qwen | qwen17b | granite | gemma | cohere")
         sys.exit(1)
 
     model_alias = sys.argv[1].lower()
