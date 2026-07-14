@@ -8,7 +8,7 @@ asrlance は、複数の音声認識モデルの性能を定量的に比較す�
 
 ## 特徴
 
-- **複数モデル対応**: MLX Whisper、OpenAI Whisper、ReazonSpeech k2、FunASR SenseVoiceSmall、Moonshine (Japanese Base)、Kotoba-Whisper v2.0、rinna/nue-asr、Qwen3-ASR 0.6B、IBM granite-4.0-1b-speech、Gemma 4 E2B (audio)、Cohere Transcribe (cohere-transcribe-03-2026) を統一インターフェースで利用可能
+- **複数モデル対応**: MLX Whisper、OpenAI Whisper、ReazonSpeech k2、FunASR SenseVoiceSmall、Moonshine (Japanese Base)、Kotoba-Whisper v2.0、rinna/nue-asr、Qwen3-ASR 0.6B/1.7B、IBM granite-4.0-1b-speech、Gemma 4 E2B (audio)、Cohere Transcribe (cohere-transcribe-03-2026) を統一インターフェースで利用可能
 - **定量評価**: CER（文字誤り率）による認識精度の自動計算
 - **パフォーマンス計測**: 処理時間・CPU使用率（平均/最大）を記録
 - **Apple Silicon 最適化**: MLX Whisper により Mac での高速推論に対応
@@ -99,6 +99,7 @@ python benchmark.py ./audio.wav ./ground_truth.txt cohere cohere_result.txt
 | `kotoba` | Kotoba-Whisper v2.0 | ReazonSpeech で蒸留した日本語特化 Whisper (large-v3 より 6.3x 高速) |
 | `nue` | rinna/nue-asr | HuBERT + GPT-NeoX ハイブリッド, ReazonSpeech v1 (19,000時間) で学習 |
 | `qwen` | Qwen3-ASR 0.6B | Alibaba Qwen の多言語 ASR (52言語対応, 日本語含む) |
+| `qwen17b` | Qwen3-ASR 1.7B | Qwen3-ASR の 1.7B 版。0.6B と同一インターフェース (`qwen-asr` パッケージ) |
 | `granite` | IBM granite-4.0-1b-speech | IBM の多言語 ASR (1B, 日本語含む6言語, OpenASR leaderboard 平均 WER 5.52) |
 | `gemma` | Gemma 4 E2B (audio) | Google のネイティブ音声入力マルチモーダル LLM (E2B = effective 2B)。**Google 公式の transformers 実装**で実行（transformers>=5.1 必須・専用 venv）|
 | `cohere` | Cohere Transcribe (cohere-transcribe-03-2026) | Cohere Labs の専用 ASR (2B, Fast-Conformer encoder-decoder, Apache 2.0, 14言語)。OpenASR(英語) 平均 WER 5.42 で公開当時 SOTA。**transformers 公式実装**で実行（transformers>=5.4 必須・専用 venv、gated 要 HF 認証）|
@@ -148,7 +149,7 @@ asrlance/
 
 - **benchmark.py**: CLI エントリーポイント。引数解析、CER 計算、結果出力を担当
 - **fileRecognizer.py**: 各音声認識モデルの統一インターフェースを提供
-- **batch_benchmark.py**: 1モデルを1回だけロードして複数音声を一括評価するバッチ版（`kotoba` / `nue` / `qwen` / `granite` / `gemma` / `cohere` 対応）
+- **batch_benchmark.py**: 1モデルを1回だけロードして複数音声を一括評価するバッチ版（`kotoba` / `nue` / `qwen` / `qwen17b` / `granite` / `gemma` / `cohere` 対応）
 
 ## ベンチマーク実績
 
@@ -164,9 +165,10 @@ asrlance/
 | IBM granite-4.0-1b-speech | 17.25% | 1.01s | 8s | MPS |
 | Cohere Transcribe (cohere-transcribe-03-2026) ※4 | 11.81% | 0.25s | 6.6s | transformers (MPS) |
 | Whisper large-v3-turbo (MLX) ※2 | 11.80% | 0.26s | 0.8s | MLX |
-| **Qwen3-ASR 0.6B** | **8.44%** | 0.78s | 4.9s | MPS |
+| Qwen3-ASR 0.6B | 8.44% | 0.78s | 4.9s | MPS |
+| **Qwen3-ASR 1.7B** ※5 | **6.48%** | 0.55s | 6.8s | MPS |
 
-> **推奨（2026-06 更新）**: 最高精度が要るなら **Qwen3-ASR 0.6B**（CER 8.44%）。ただし **速度（0.25s/文・実時間の約26倍速）× 精度（2位・11.81%）× 実装の素直さ（Apache 2.0・専用 ASR で後処理不要・英単語の大小文字保持）** を両取りする実運用の既定候補としては **Cohere Transcribe を推奨**（ローカル勢で最速・メモリ ~4GB・gated だが規約同意で即時）。
+> **推奨（2026-07 更新）**: 最高精度が要るなら **Qwen3-ASR 1.7B**（CER 6.48%・中央値 0.00%）。Qwen3-ASR 1.7B は 0.55s/文と十分速く、**精度と速度の両取りでも実運用の既定候補**になった。純粋な速度最優先（0.25s/文・実時間の約26倍速）なら **Cohere Transcribe**（精度 11.81% は 1.7B/0.6B/Whisper turbo に次ぐ4位、Apache 2.0・後処理不要・英単語の大小文字保持）も引き続き有力。
 
 ※1 Gemma 4 E2B は 2026-06 追加。Google 公式 transformers 実装で測定（中央値 CER は 14.09%）。MLX(mlx-vlm) 経路は音声品質が約8倍悪化するため不採用。詳細は下記「Gemma 4 E2B (audio) の検証結果」。
 
@@ -175,6 +177,8 @@ asrlance/
 ※3 ロード時間はウォーム（モデルキャッシュ済）での値。旧 2026-04 表の Qwen3-ASR **127s**・kotoba **69s** は初回ダウンロード込みの計測だったため、2026-06 にウォーム再計測して **4.9s・3.5s** に訂正。nue(11s)/granite(8s)/Gemma(10.1s)/Whisper(0.8s) は妥当なウォーム値。
 
 ※4 Cohere Transcribe は 2026-06 追加。transformers 公式実装 (`CohereAsrForConditionalGeneration`, MPS) で測定（中央値 CER **8.57%**、CER≤30% **19/20**、完璧(0%) 6/20）。英語 OpenASR では SOTA(WER 5.42) だが、自声20文では **Qwen3-ASR(8.44%) に次ぐ2位**で Whisper turbo(11.80%) とほぼ同率、かつ **ローカル勢で最速（0.25s/文・実時間の約26倍速・メモリ ~4GB・CPU平均46%）**。失点の大半は漢字↔仮名の表記揺れ（今日→きょう、明日→あした、家族→かぞ）と英小文字化（api / json）。公式リポは gated（Apache 2.0, 規約同意で即時アクセス付与）で要 HF 認証。詳細は下記「Cohere Transcribe の検証結果」。
+
+※5 Qwen3-ASR 1.7B は 2026-07 追加。`qwen-asr` パッケージ（0.6B と同一インターフェース, MPS, fp16）で測定。**平均 CER 6.48%・中央値 0.00%（完璧 11/20・CER≤30% 19/20）で本表の最高精度を更新**し、推論も 0.55s/文と 0.6B(0.78s) より速かった。詳細は下記「Qwen3-ASR 1.7B の検証結果」。
 
 **主な観察**
 - Qwen3-ASR は依然最良。英単語/アルファベット（Python, GitHub, OpenAI, ChatGPT, iPhone 等）をそのまま大文字混じりで出力でき、他モデルのカタカナ化（パイソン、ギットハブ）や小文字化（python, github）による CER 増加を回避している。
@@ -254,6 +258,36 @@ kotoba-whisper(19.65%)・nue(19.17%)・granite(17.25%) と**ほぼ互角**（Qwe
 - transformers 公式実装の `CohereAsrForConditionalGeneration` を使う。**transformers>=5.4** が必要で本リポジトリの他モデル(4.57.x)とは非互換のため、**cohere だけ専用 venv** を作る（トラブルシューティング参照）。
 - 言語の自動判定を持たないため、processor に **`language="ja"` を明示**する（未指定だと言語が振れる）。
 - 公式リポ `CohereLabs/cohere-transcribe-03-2026` は **gated**（Apache 2.0・規約同意で即時アクセス付与）。HF にログインし、モデルページで規約同意のうえ **gated を読めるトークン**（Read トークン等）で認証する。ungated ミラーは ONNX/GGUF（量子化・別ランタイム）のみで、フル精度ローカル比較には公式リポを使う。
+
+### Qwen3-ASR 1.7B の検証結果（2026-07）
+
+同じ自声20文を、Qwen3-ASR の 1.7B 版 `Qwen/Qwen3-ASR-1.7B`（約 3.5GB, 52言語対応, 0.6B と同一の `qwen-asr` パッケージ）で測定。
+
+| 指標 | 値 |
+|---|---|
+| 平均 CER | **6.48%** |
+| 中央値 CER | **0.00%** |
+| 完璧(0%) の文数 | **11/20** |
+| CER≤30% の文数 | 19/20 |
+| 平均推論時間 | 0.55s/文（ウォーム、初回ロード直後の1文目のみ 0.73s） |
+| モデルロード（ウォーム） | 6.8s |
+| 実行デバイス | MPS（Apple Silicon GPU, fp16） |
+
+**結論: 本リポジトリの最高精度を更新（8.44% → 6.48%）。** 20文中11文を完全一致で認識し、推論も 0.6B（0.78s/文）より速い 0.55s/文。0.6B と同一インターフェースなので導入コストはモデルサイズ差（1.2GB → 3.5GB）のみ。
+
+**強み**
+- 0.6B の美点（英単語/アルファベットの大小文字保持: Python, API, JSON, GitHub, OpenAI, ChatGPT, Anthropic, Claude → すべて CER 0%）をそのまま継承。
+- **難読地名「東京特許許可局」を CER 3.7% でほぼ攻略**（全モデルが未到達だった難所。Cohere でも 22%）。
+- 早口言葉「赤パジャマ青パジャマ黄パジャマ」も 14.81% と健闘（0.6B 含む従来勢は 40〜63%、0% は Cohere のみ）。
+
+**失点の傾向**
+- 最大の失点は日付文（CER 45%）: 「二〇二五年十二月二十八日」→「2025年10月28日」。漢数字→算用数字の表記揺れに加え「十二月」→「10月」の聞き取り誤りを含む。
+- カタカナ化: iPhone →「アイフォン」(25%)。0.6B が得意だった箇所でむしろ揺れた。
+- 語彙置換: 補聴器→「ホットオーキ」(16.67%)、ベンチマーク→「ベンチマート」。
+
+**コツ/ハマりどころ**
+- HF からの初回 DL（~3.5GB）は xet バックエンドがストールしやすい（実測で 450MB 地点から 30分無進捗）。**`HF_HUB_DISABLE_XET=1` を付けると安定**（Gemma の項と同じ既知問題）。
+- それ以外は 0.6B と完全に同じ手順で動く（`pip install qwen-asr`、transformers 4.57.x 環境で OK、専用 venv 不要）。
 
 ## 今後の追加候補モデル（2026-04 調査）
 
@@ -348,7 +382,7 @@ pip install git+https://github.com/rinnakk/nue-asr.git
 pip install qwen-asr
 ```
 
-初回実行時に HuggingFace Hub から `Qwen/Qwen3-ASR-0.6B`（約 1.2GB）を自動ダウンロードします。MPS/CPU でも動きますが、パフォーマンスは CUDA GPU が最良です。
+初回実行時に HuggingFace Hub から `Qwen/Qwen3-ASR-0.6B`（約 1.2GB）を自動ダウンロードします。`qwen17b` エイリアスでは `Qwen/Qwen3-ASR-1.7B`（約 3.5GB）を使用します。MPS/CPU でも動きますが、パフォーマンスは CUDA GPU が最良です。
 
 **granite-4.0-1b-speech インストール:**
 

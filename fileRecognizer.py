@@ -288,11 +288,13 @@ def recognize_with_nue_asr(audio_path: str) -> Tuple[str, float, float, float]:
 
 
 # ============================================================
-# Qwen3-ASR 0.6B 認識
+# Qwen3-ASR (0.6B / 1.7B) 認識
 # ============================================================
-def recognize_with_qwen3_asr(audio_path: str) -> Tuple[str, float, float, float]:
+def recognize_with_qwen3_asr(
+    audio_path: str, model_id: str = "Qwen/Qwen3-ASR-0.6B"
+) -> Tuple[str, float, float, float]:
     """
-    Qwen3-ASR 0.6B（Alibaba Qwen, 52言語対応, 日本語含む）で音声認識を行う
+    Qwen3-ASR（Alibaba Qwen, 52言語対応, 日本語含む）で音声認識を行う
     """
     import torch
     from qwen_asr import Qwen3ASRModel
@@ -310,9 +312,9 @@ def recognize_with_qwen3_asr(audio_path: str) -> Tuple[str, float, float, float]
         device_map = "cpu"
         dtype = torch.float32
 
-    print(f"Qwen3-ASR 0.6B モデルをロード中... (device_map={device_map})")
+    print(f"Qwen3-ASR モデルをロード中... ({model_id}, device_map={device_map})")
     model = Qwen3ASRModel.from_pretrained(
-        "Qwen/Qwen3-ASR-0.6B",
+        model_id,
         dtype=dtype,
         device_map=device_map,
         max_inference_batch_size=32,
@@ -619,6 +621,8 @@ def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, flo
         return recognize_with_nue_asr(audio_path)
     elif model_alias == "qwen":
         return recognize_with_qwen3_asr(audio_path)
+    elif model_alias == "qwen17b":
+        return recognize_with_qwen3_asr(audio_path, "Qwen/Qwen3-ASR-1.7B")
     elif model_alias == "granite":
         return recognize_with_granite(audio_path)
     elif model_alias == "gemma":
@@ -670,6 +674,11 @@ MODEL_INFO = {
         "name": "Qwen3-ASR 0.6B",
         "alias": "qwen",
         "display_name": "Qwen3-ASR-0.6B（Alibaba Qwen, 52言語対応）"
+    },
+    "qwen17b": {
+        "name": "Qwen3-ASR 1.7B",
+        "alias": "qwen17b",
+        "display_name": "Qwen3-ASR-1.7B（Alibaba Qwen, 52言語対応）"
     },
     "granite": {
         "name": "IBM granite-4.0-1b-speech",
