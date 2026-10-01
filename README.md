@@ -149,7 +149,7 @@ asrlance/
 
 - **benchmark.py**: CLI エントリーポイント。引数解析、CER 計算、結果出力を担当
 - **fileRecognizer.py**: 各音声認識モデルの統一インターフェースを提供
-- **batch_benchmark.py**: 1モデルを1回だけロードして複数音声を一括評価するバッチ版（`kotoba` / `nue` / `qwen` / `qwen17b` / `granite` / `gemma` / `cohere` 対応）
+- **batch_benchmark.py**: 1モデルを1回だけロードして複数音声を一括評価するバッチ版（`mlx` / `kotoba` / `nue` / `qwen` / `qwen17b` / `granite` / `gemma` / `cohere` 対応）
 
 ## ベンチマーク実績
 
@@ -167,6 +167,8 @@ asrlance/
 | Whisper large-v3-turbo (MLX) ※2 | 11.80% | 0.26s | 0.8s | MLX |
 | Qwen3-ASR 0.6B | 8.44% | 0.78s | 4.9s | MPS |
 | **Qwen3-ASR 1.7B** ※5 | **6.48%** | 0.55s | 6.8s | MPS |
+
+> 2026-10 に別の30文で再測定した結果、Cohere Transcribe が1位・Qwen3-ASR 1.7B が2位に入れ替わった（差は小さい）。下記「自声 30文での追加検証」を参照。
 
 > **推奨（2026-07 更新）**: 最高精度が要るなら **Qwen3-ASR 1.7B**（CER 6.48%・中央値 0.00%）。Qwen3-ASR 1.7B は 0.55s/文と十分速く、**精度と速度の両取りでも実運用の既定候補**になった。純粋な速度最優先（0.25s/文・実時間の約26倍速）なら **Cohere Transcribe**（精度 11.81% は 1.7B/0.6B/Whisper turbo に次ぐ4位、Apache 2.0・後処理不要・英単語の大小文字保持）も引き続き有力。
 
@@ -188,6 +190,55 @@ asrlance/
 - CER は表記ゆれ（漢数字 vs 算用数字、大文字 vs 小文字、カタカナ vs アルファベット、漢字 vs 仮名）を一律ペナルティとして数える点に注意。
 
 ※ 録音データ・結果CSV（`my_voice/`）はリポジトリに含めず `.gitignore` で除外。
+
+### 自声 30文での追加検証（2026-10）
+
+別の30文（日常会話調の長め・フィラー入り、6.89〜11.60秒、16kHz/mono/PCM16）で、上記 8 モデルを同条件で再測定。正解テキスト（`my_voice_30/utt_NNN.txt`）は録音者本人が発話との一致を確認済み。
+
+| モデル | 平均 CER | 中央値 CER | CER≤30% | 平均推論時間 | モデルロード | 実行環境 |
+|---|---|---|---|---|---|---|
+| **Cohere Transcribe** | **9.25%** | 7.29% | 30/30 | 0.46s | 102s ※a | transformers (MPS) |
+| Qwen3-ASR 1.7B | 10.13% | 8.33% | 29/30 | 1.35s | 10.4s | MPS |
+| rinna/nue-asr (yky-h) | 10.30% | 8.31% | 29/30 | 2.77s | 7.6s | MPS |
+| IBM granite-4.0-1b-speech | 10.69% | 10.00% | 30/30 | 3.49s | 9.5s | MPS |
+| Qwen3-ASR 0.6B | 12.75% | 11.27% | 29/30 | 1.06s | 9.1s | MPS |
+| Whisper large-v3-turbo (MLX) | 12.78% | 12.00% | 30/30 | **0.41s** | 1.1s | MLX |
+| kotoba-whisper v2.0 | 15.44% | 14.13% | 30/30 | 0.90s | 4.1s | MPS |
+| Gemma 4 E2B (audio) ※b | 34.40% | 18.84% | 27/30 | 2.24s | 16.5s | transformers (MPS) |
+
+※a 初回ダウンロード込みの値（ウォームなら数秒〜10秒台）。他モデルはキャッシュ済み。
+※b utt_027 で同じ文字列を繰り返す暴走（CER 480.77%）が出て平均を押し上げている。除くと平均 約19.0%。
+
+**観察**
+- **20文とは順位が変わった**: 20文では Qwen3-ASR 1.7B（6.48%）が最良だったが、30文では Cohere Transcribe が1位（9.25%）、Qwen3-ASR 1.7B は2位（10.13%）。上位4モデル（9.25〜10.69%）の差は 1.5pt 程度で、30文では順位を確定できる差ではない。「Qwen 1.7B が常に最高精度」とは言えず、**文の種類（今回は長めの会話調・フィラー入り）で順位が入れ替わる**。
+- **句読点が CER を大きく左右する**: 本ツールの CER は句読点（、。？）も誤りとして数えるため、今回は完全一致（0%）が全モデルで0文。参考に句読点を除いて再計算すると下表のとおりで、平均が約4pt 下がり、完全一致も出る。**順位も入れ替わる**（nue が2位、Whisper turbo が4位に上がる）ので、モデル間の優劣は句読点の扱い次第で変わる。
+
+  | モデル | 平均 CER（句読点除外） | 完全一致 |
+  |---|---|---|
+  | Cohere Transcribe | 5.33% | 6/30 |
+  | rinna/nue-asr | 5.73% | 11/30 |
+  | Whisper large-v3-turbo (MLX) | 6.48% | 9/30 |
+  | IBM granite-4.0-1b-speech | 6.74% | 7/30 |
+  | Qwen3-ASR 1.7B | 6.94% | 6/30 |
+  | kotoba-whisper v2.0 | 9.40% | 4/30 |
+  | Qwen3-ASR 0.6B | 9.55% | 3/30 |
+
+  （Gemma は未再計算。）上表の主表（句読点込み）が `batch_benchmark.py` の出力そのもの。
+- 全モデル共通で崩れやすかったのは utt_027（「説明が長くなると途中で追えなくなる…」）と utt_009・utt_028・utt_023 で、聞き取りの難しさは文に依存する。誤りの多くは同音・近音の置換（用事→用紙、何がよくて→何がよとて 等）。
+- 速度は Whisper turbo (MLX) 0.41s と Cohere 0.46s が突出して速い。精度と速度の両立では Cohere が最もバランスが良い。
+- Gemma 4 E2B は平均を暴走が大きく悪化させる。実運用では生成長の上限（`max_new_tokens`）や繰り返し抑制が必要。
+
+**再現手順**
+
+```bash
+# my_voice_30/ に utt_NNN.wav と utt_NNN.txt を置く
+HF_HUB_DISABLE_XET=1 .venv/bin/python batch_benchmark.py qwen17b my_voice_30 my_voice_30/result_qwen17b.csv
+# mlx / qwen / granite / kotoba / nue も同様（.venv）
+HF_HUB_DISABLE_XET=1 ~/cohere-venv/bin/python batch_benchmark.py cohere my_voice_30 my_voice_30/result_cohere.csv
+HF_HUB_DISABLE_XET=1 ~/gemma-venv/bin/python batch_benchmark.py gemma my_voice_30 my_voice_30/result_gemma.csv
+```
+
+※ 録音データ・結果CSV（`my_voice_30/*.wav` / `result_*.csv`）は `.gitignore` で除外。
 
 ### Gemma 4 E2B (audio) の検証結果（2026-06）
 
@@ -328,6 +379,12 @@ Meta SeamlessM4T-v2-Large（CC-BY-NC）、Meta MMS、ESPnet OWSM v4、Fun-ASR-Na
 
 3. **サンプリングレート**
    入力音声は **16kHz** が推奨されます。異なるレートの場合、自動リサンプリングされます。
+
+### macOS 更新後の環境トラブル（2026-10 実測）
+
+- **scipy の `dlopen ... _spropack ... __thread_bss` エラー**: scipy 1.15.x の wheel が新しい macOS のローダーに弾かれる。`uv pip install --python <venv>/bin/python scipy==1.14.1` で解消（`.venv` / `~/cohere-venv` / `~/gemma-venv` すべて）。
+- **`Could not load libtorchcodec` / `libavutil.56.dylib`**: torchcodec が Homebrew の ffmpeg 版数と合わず読めない。使っていなければ `uv pip uninstall --python .venv/bin/python torchcodec` で回避（kotoba で発生）。
+- **gemma-venv で `Segmentation fault`（exit 139）**: torch 2.14.1 + transformers 5.18.0 の組み合わせでモデルロード中に発生。`torch==2.12.1 transformers==5.12.1`（cohere-venv と同じ版）に固定すると動く。
 
 ### インストールエラー
 
