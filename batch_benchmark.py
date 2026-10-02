@@ -6,7 +6,7 @@ batch_benchmark.py - 複数音声ファイルに対して1モデルを1回だけ
     python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]
 
 音声ディレクトリには <stem>.wav と同名の <stem>.txt（正解テキスト）が対で存在する想定。
-モデルエイリアス: kotoba, nue, qwen, qwen17b, granite, gemma, cohere
+モデルエイリアス: mlx, kotoba, nue, qwen, qwen17b, granite, gemma, cohere
 """
 
 import csv
@@ -29,6 +29,24 @@ def _cpu_sample(process: psutil.Process, samples: list) -> None:
 # ============================================================
 # モデルごとの load / infer 分離実装
 # ============================================================
+def build_mlx_runner() -> Callable[[str], str]:
+    import mlx_whisper
+
+    repo = "mlx-community/whisper-large-v3-turbo"
+    print(f"[mlx] loading model ({repo}) ...")
+    # 重みを事前ロードしてロード時間を推論から分離する（ダミー推論はせず、キャッシュ済みモデルを読み込むだけ）
+    from mlx_whisper.transcribe import ModelHolder
+    import mlx.core as mx
+
+    ModelHolder.get_model(repo, mx.float16)
+
+    def _run(audio_path: str) -> str:
+        result = mlx_whisper.transcribe(audio_path, path_or_hf_repo=repo, language="ja")
+        return result["text"]
+
+    return _run
+
+
 def build_kotoba_runner() -> Callable[[str], str]:
     import torch
     from transformers import pipeline
@@ -245,6 +263,7 @@ def build_cohere_runner() -> Callable[[str], str]:
 
 
 RUNNERS = {
+    "mlx": build_mlx_runner,
     "kotoba": build_kotoba_runner,
     "nue": build_nue_runner,
     "qwen": build_qwen_runner,
@@ -261,7 +280,7 @@ RUNNERS = {
 def main():
     if len(sys.argv) < 3:
         print("使用方法: python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]")
-        print("モデル: kotoba | nue | qwen | qwen17b | granite | gemma | cohere")
+        print("モデル: mlx | kotoba | nue | qwen | qwen17b | granite | gemma | cohere")
         sys.exit(1)
 
     model_alias = sys.argv[1].lower()

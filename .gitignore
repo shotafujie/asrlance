@@ -20,6 +20,10 @@ uv.lock
 my_voice/*.wav
 my_voice/result_*.csv
 my_voice/comparison.csv
+my_voice_30/*.wav
+my_voice_30/result_*.csv
+my_voice_50/*.wav
+my_voice_50/result_*.csv
 sample_*.wav
 ground_truth_*.txt
 
