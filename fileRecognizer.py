@@ -605,6 +605,9 @@ def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, flo
     Returns:
         Tuple[str, float, float, float]: (認識テキスト, 処理時間, 平均CPU, 最大CPU)
     """
+    if model_alias in ("nemotron-stock", "nemotron-mlx8"):
+        from nemotron_runtime import recognize_file
+        return recognize_file(audio_path,model_alias)
     if model_alias == "mlx":
         return recognize_with_mlx_whisper(audio_path)
     elif model_alias == "whisper":
@@ -635,6 +638,8 @@ def recognize(audio_path: str, model_alias: str) -> Tuple[str, float, float, flo
 
 # モデル情報の定義
 MODEL_INFO = {
+    "nemotron-stock": {"name":"Nemotron 3.5 Transcribe 30B-A4B BF16/MPS", "alias":"nemotron-stock", "display_name":"Nemotron reference BF16"},
+    "nemotron-mlx8": {"name":"Nemotron 3.5 Transcribe 30B-A4B MLX8", "alias":"nemotron-mlx8", "display_name":"Nemotron MLX8 affine/group64"},
     "mlx": {
         "name": "MLX Whisper Large V3 Turbo",
         "alias": "mlx",

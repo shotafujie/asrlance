@@ -1,0 +1,8 @@
+# Python3.11, Apple Silicon; separate environment from MLX and legacy ASR dependencies.
+numpy==2.2.6
+psutil==7.2.2
+torch==2.15.0
+transformers @ git+https://github.com/huggingface/transformers.git@144ecf007b8b4f2910da104c84a79801db6985a6
+accelerate==1.15.0
+librosa==0.11.0
+soundfile==0.14.0
