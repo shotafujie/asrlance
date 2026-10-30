@@ -1,0 +1,10 @@
+{
+  "revision": "9d8cd6b79bfdd427b6558a5fdbf76fcaf8c75341",
+  "config_sha256": "671882895b3711f93b2e88149e11271f4591680e2756976a43a2967992c946c7",
+  "model_headers": {
+    "model.safetensors": {
+      "size": 67496013734,
+      "header_sha256": "436ae654f8eefece53f310608c017eaf4a1a00b8c7561610c3c2b24bb2285c5c"
+    }
+  }
+}

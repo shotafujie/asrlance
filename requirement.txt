@@ -67,3 +67,6 @@ peft
 # librosa
 # sentencepiece
 # protobuf
+
+# Nemotron: isolated environments required; see nemotron/requirements-mlx8.txt,
+# nemotron/requirements-stock.txt and docs/nemotron-evaluation.md.

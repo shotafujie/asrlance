@@ -1,0 +1,256 @@
+{
+  "ctc_timestamp.decoder.decoder_layers.0.bias": {
+    "shape": [
+      23863
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.decoder_layers.0.weight": {
+    "shape": [
+      23863,
+      1280,
+      1
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.residual_scale": {
+    "shape": [],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.embed_norm.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.embed_norm.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.final_norm.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.final_norm.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.k_norm.bias": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.k_norm.weight": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.out_proj.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.out_proj.weight": {
+    "shape": [
+      1280,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.q_norm.bias": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.q_norm.weight": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.attn.w_qkv.weight": {
+    "shape": [
+      3840,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.ffn.net.0.bias": {
+    "shape": [
+      640
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.ffn.net.0.weight": {
+    "shape": [
+      640,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.ffn.net.3.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.ffn.net.3.weight": {
+    "shape": [
+      1280,
+      640
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.norm1.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.norm1.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.norm2.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.0.norm2.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.k_norm.bias": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.k_norm.weight": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.out_proj.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.out_proj.weight": {
+    "shape": [
+      1280,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.q_norm.bias": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.q_norm.weight": {
+    "shape": [
+      80
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.attn.w_qkv.weight": {
+    "shape": [
+      3840,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.ffn.net.0.bias": {
+    "shape": [
+      640
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.ffn.net.0.weight": {
+    "shape": [
+      640,
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.ffn.net.3.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.ffn.net.3.weight": {
+    "shape": [
+      1280,
+      640
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.norm1.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.norm1.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.norm2.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.transformer.layers.1.norm2.weight": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.upsample.bias": {
+    "shape": [
+      1280
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.upsample.weight": {
+    "shape": [
+      1280,
+      1280,
+      2
+    ],
+    "dtype": "F32"
+  },
+  "ctc_timestamp.decoder.upsample_factor": {
+    "shape": [],
+    "dtype": "I64"
+  },
+  "ctc_timestamp.tokenizer.model_proto": {
+    "shape": [
+      632302
+    ],
+    "dtype": "U8"
+  }
+}

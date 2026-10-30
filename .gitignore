@@ -37,3 +37,7 @@ ground_truth_*.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Nemotron models and isolated runtimes
+models/
+.venv-nemotron-*/

@@ -6,7 +6,7 @@ batch_benchmark.py - 複数音声ファイルに対して1モデルを1回だけ
     python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]
 
 音声ディレクトリには <stem>.wav と同名の <stem>.txt（正解テキスト）が対で存在する想定。
-モデルエイリアス: mlx, kotoba, nue, qwen, qwen17b, granite, gemma, cohere
+モデルエイリアス: mlx, kotoba, nue, qwen, qwen17b, granite, gemma, cohere, nemotron-stock, nemotron-mlx8
 """
 
 import csv
@@ -262,7 +262,14 @@ def build_cohere_runner() -> Callable[[str], str]:
     return _run
 
 
+def build_nemotron_runner(alias):
+    from nemotron_runtime import Runner
+    return Runner(alias)
+
+
 RUNNERS = {
+    "nemotron-stock": lambda: build_nemotron_runner("nemotron-stock"),
+    "nemotron-mlx8": lambda: build_nemotron_runner("nemotron-mlx8"),
     "mlx": build_mlx_runner,
     "kotoba": build_kotoba_runner,
     "nue": build_nue_runner,
@@ -278,9 +285,13 @@ RUNNERS = {
 # メイン
 # ============================================================
 def main():
+    if len(sys.argv)==2 and sys.argv[1] in ("--help","--list"):
+        print("モデル: " + " | ".join(RUNNERS))
+        print("python batch_benchmark.py <model> <audio-directory> [output.csv]")
+        return
     if len(sys.argv) < 3:
         print("使用方法: python batch_benchmark.py <モデルエイリアス> <音声ディレクトリ> [出力CSVパス]")
-        print("モデル: mlx | kotoba | nue | qwen | qwen17b | granite | gemma | cohere")
+        print("モデル: " + " | ".join(RUNNERS))
         sys.exit(1)
 
     model_alias = sys.argv[1].lower()
@@ -299,6 +310,10 @@ def main():
     if not wav_paths:
         print(f"エラー: wav ファイルが見つかりません: {audio_dir}")
         sys.exit(1)
+
+    if model_alias.startswith("nemotron-"):
+        from nemotron_runtime import run_batch
+        return run_batch(model_alias,audio_dir,output_csv,builder=lambda alias: RUNNERS[alias]())
 
     # モデル情報 & ランナー構築
     model_info = get_model_info(model_alias)

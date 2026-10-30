@@ -1,0 +1,23 @@
+{
+  "source_revision": "9d8cd6b79bfdd427b6558a5fdbf76fcaf8c75341",
+  "bits": 8,
+  "group_size": 64,
+  "files": {
+    "LICENSE": "18c3a96fd1ee779263aa9210e3d962d5899511890254f3f3efd70ece81d89866",
+    "THIRD_PARTY_NOTICES.md": "d61d7ca8e896ccc5de6573ce75cc91335fe7460718b8cd84a8f1312fd5b1b72c",
+    "chat_template.jinja": "c439e20c5565d590915ff8777c519b3ebcd3da685e677893bee56f73036eb67c",
+    "config.json": "18a715d075cbdba2268a44d9403c0e72b13b860e6405a2fdf92708c6d3449a2e",
+    "generation_config.json": "d48f72c695fa8a239373070371a404a51d778d30018a1768307a2d0209549e43",
+    "model-00001-of-00007.safetensors": "495f909179c58273e07fc0b64339f0c02f2c7c4c1cad8008244c23ecc921fe30",
+    "model-00002-of-00007.safetensors": "c3bf322111bea90d76653982b3409e4b402fe27c026cd25e4b3c941214a1bc63",
+    "model-00003-of-00007.safetensors": "26925317daa7c83d259498f4db321689851fa92605f6f6abaea15426a062c017",
+    "model-00004-of-00007.safetensors": "1efe713cb7c78ae443c6c352fb7eba3b6f4c91e1fd924f69cd2681b1c83bcd28",
+    "model-00005-of-00007.safetensors": "35d8e4454fdf4bd900d2c5a514fd490ad8e9defe4f9c56b472c6cd5362dcaf3d",
+    "model-00006-of-00007.safetensors": "29d199bfbe81bb58cb8e8a4fc23c38e452951be086d1ef3ea77e5ee5b2befa82",
+    "model-00007-of-00007.safetensors": "10030adfedfaf3e7b30a464a3dc18198893391bac9c64c30218546d8c6059f3c",
+    "model.safetensors.index.json": "00b35a0f6eaea25239986bdac00671c0ae5c311a5a1518be774b1c4e5fea1524",
+    "processor_config.json": "15976164006286516364f8c51c50c1680dec3a58d3426c157f7acd99129a1a8f",
+    "tokenizer.json": "d071004cb4450d3aa31f87aab979cd09ffc99c4e709e6cf72c324346cd948d0d",
+    "tokenizer_config.json": "538762e8e2efa04c90f593de555a808da4c1290f4fed4df4624423c57b9180f1"
+  }
+}
