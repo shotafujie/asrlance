@@ -1,0 +1,269 @@
+{
+  "hardware": "Apple M4 Max,128GiB unified memory",
+  "schedule": "one model/process at a time;batch1;single pass",
+  "dataset_counts": {
+    "all": 100,
+    "self_voice50": 50,
+    "koepus_test": 22,
+    "koepus_added28": 28
+  },
+  "models": [
+    {
+      "alias": "mlx",
+      "model_id": "mlx-community/whisper-large-v3-turbo",
+      "revision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+      "precision": "MLX cached model",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 0.8952484159963205,
+      "warmup_s": [
+        0.4603719160077162,
+        0.24504295800579712
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 1839169536,
+      "mlx_allocator_peak_bytes": 2476977774,
+      "swap_delta": 0,
+      "available_min": 104532230144
+    },
+    {
+      "alias": "qwen17b",
+      "model_id": "Qwen/Qwen3-ASR-1.7B",
+      "revision": "7278e1e70fe206f11671096ffdd38061171dd6e5",
+      "precision": "FP16/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 6.279419250029605,
+      "warmup_s": [
+        0.8363096250104718,
+        0.15432387497276068
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 5411291136,
+      "mps_driver_observed_peak_bytes": 6306545664,
+      "swap_delta": 0,
+      "available_min": 93300670464
+    },
+    {
+      "alias": "qwen",
+      "model_id": "Qwen/Qwen3-ASR-0.6B",
+      "revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0",
+      "precision": "FP16/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 4.061378124984913,
+      "warmup_s": [
+        0.5978287080070004,
+        0.08027287502773106
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 3535781888,
+      "mps_driver_observed_peak_bytes": 3620241408,
+      "swap_delta": 0,
+      "available_min": 94268375040
+    },
+    {
+      "alias": "kotoba",
+      "model_id": "kotoba-tech/kotoba-whisper-v2.0",
+      "revision": "7eb575277d18909a4af8a24e3ae8cce2e99794ae",
+      "precision": "FP32/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 3.0684474169975147,
+      "warmup_s": [
+        0.7364651249954477,
+        0.47477458301000297
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 4666867712,
+      "mps_driver_observed_peak_bytes": 5084151808,
+      "swap_delta": 0,
+      "available_min": 93048848384
+    },
+    {
+      "alias": "nue",
+      "model_id": "yky-h/nue-asr",
+      "revision": "43c238878b0cca29abf1c655b6f903606fad8f95",
+      "precision": "FP32/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 6.024427957949229,
+      "warmup_s": [
+        1.0234032910084352,
+        0.21640874998411164
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 22656942080,
+      "mps_driver_observed_peak_bytes": 24161288192,
+      "swap_delta": 0,
+      "available_min": 62276829184
+    },
+    {
+      "alias": "granite",
+      "model_id": "ibm-granite/granite-4.0-1b-speech",
+      "revision": "bd87ab862416353633ea431fe49b1614003623c5",
+      "precision": "FP16/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.9.1",
+        "transformers": "4.57.6",
+        "mlx": "0.31.2",
+        "mlx-whisper": "0.4.3",
+        "qwen-asr": "0.0.6",
+        "nue-asr": "0.1.2",
+        "numpy": "2.2.6",
+        "psutil": "7.2.0"
+      },
+      "load_s": 4.62062474997947,
+      "warmup_s": [
+        0.38012958300532773,
+        0.13493658299557865
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 3641573376,
+      "mps_driver_observed_peak_bytes": 5621694464,
+      "swap_delta": 0,
+      "available_min": 74332143616
+    },
+    {
+      "alias": "cohere",
+      "model_id": "CohereLabs/cohere-transcribe-03-2026",
+      "revision": "b1eacc2686a3d08ceaae5f24a88b1d519620bc09",
+      "precision": "FP16/MPS",
+      "postprocessing": "none",
+      "versions": {
+        "torch": "2.12.1",
+        "transformers": "5.12.1",
+        "numpy": "2.2.6",
+        "psutil": "7.2.2"
+      },
+      "load_s": 5.454067667014897,
+      "warmup_s": [
+        0.3127480419934727,
+        0.08599049999611452
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 8730869760,
+      "mps_driver_observed_peak_bytes": 5618679808,
+      "swap_delta": 0,
+      "available_min": 76710952960
+    },
+    {
+      "alias": "gemma",
+      "model_id": "unsloth/gemma-4-E2B-it-qat-q4_0-unquantized",
+      "revision": "13139d07f4cc4b6a2585ea6ab9fde6063281ae14",
+      "precision": "FP16/MPS",
+      "postprocessing": "existing clean_gemma_transcription",
+      "versions": {
+        "torch": "2.12.1",
+        "transformers": "5.12.1",
+        "numpy": "2.2.6",
+        "psutil": "7.2.2"
+      },
+      "load_s": 7.7698993750382215,
+      "warmup_s": [
+        2.654735082993284,
+        2.009339208016172
+      ],
+      "token_cap_observable": false,
+      "observed_rss_peak": 16623353856,
+      "mps_driver_observed_peak_bytes": 15217410048,
+      "swap_delta": 0,
+      "available_min": 64327122944
+    },
+    {
+      "alias": "nemotron-mlx8",
+      "model_id": "nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+      "revision": "9d8cd6b79bfdd427b6558a5fdbf76fcaf8c75341",
+      "precision": "MLX8 affine/group64",
+      "postprocessing": "none",
+      "prompt_policy": "Japanese; short<=32000 samples",
+      "versions": {
+        "transformers": "5.21.1",
+        "mlx": "0.32.4",
+        "mlx-audio": "0.6.3",
+        "numpy": "2.4.6",
+        "psutil": "7.2.2"
+      },
+      "load_s": 16.053243292029947,
+      "warmup_s": [
+        0.49444445804692805,
+        0.15911283297464252
+      ],
+      "token_cap_observable": true,
+      "observed_rss_peak": 35463544832,
+      "mlx_allocator_peak_bytes": 35655856578,
+      "swap_delta": 0,
+      "available_min": 55312613376
+    },
+    {
+      "alias": "nemotron-stock",
+      "model_id": "nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+      "revision": "9d8cd6b79bfdd427b6558a5fdbf76fcaf8c75341",
+      "precision": "BF16/MPS eager",
+      "postprocessing": "none",
+      "prompt_policy": "stock as-spoken",
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.0.dev0",
+        "numpy": "2.2.6",
+        "psutil": "7.2.2"
+      },
+      "load_s": 31.690007332945243,
+      "warmup_s": [
+        14.604357166972477,
+        0.49468895798781887
+      ],
+      "token_cap_observable": true,
+      "observed_rss_peak": 34682748928,
+      "mps_driver_observed_peak_bytes": 69133254656,
+      "swap_delta": 11468800,
+      "available_min": 24515510272
+    }
+  ]
+}
